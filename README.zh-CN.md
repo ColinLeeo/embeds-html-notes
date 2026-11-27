@@ -6,9 +6,11 @@
 
 [TsFile 存储走读台](examples/tsfile/tsfile-storage-workbench.html)把索引查找、时间筛页、整数编码放在一个 HTML 文件里。笔记可以单独引用其中任何一个交互区。
 
-[![Obsidian 左侧是有三个交互区的完整 TsFile 走读台，右侧的 Markdown 正文单独嵌入了其中的索引面板，查找键同为 s14。](docs/screenshots/tour/zh/one-panel.png)](docs/screenshots/tour/zh/one-panel.png)
+[![左边是浏览器中从页眉到页脚的完整 HTML。右边是 Obsidian 的文件栏和实时预览编辑器，索引面板下方选中了刚写的观察。](docs/screenshots/tour/zh/one-panel.png)](docs/screenshots/tour/zh/one-panel@2x.png)
 
-**①** 左边整页里，在索引面板点「选为引用场景」，再点「复制嵌入」。**②** 右边正文只打开这个面板，查找键和模式都保留。在正文切到「精确匹配」，再点「打开整页」，刚才的选择也会跟过去。
+两处紫框标出同一个 `#lookup` 面板。在右边的 Obsidian 实时预览里，可以切换「取前驱」和「精确匹配」，再把观察直接写在结果下方。
+
+要引用另一块，在 Obsidian 里打开这个 HTML，点目标面板的「选为引用场景」，再点「复制嵌入」。
 
 ```md
 ![[tsfile-storage-workbench.html#lookup?key=s14&mode=floor&lang=zh]]

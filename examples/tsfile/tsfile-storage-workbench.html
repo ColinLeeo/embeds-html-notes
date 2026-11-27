@@ -656,6 +656,34 @@
         display: none
       }
 
+      .source-notes {
+        padding: clamp(12px, 2.6vw, 24px);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--soft)
+      }
+
+      .source-notes h2 {
+        font-size: clamp(19px, 2vw, 25px)
+      }
+
+      .source-notes dl {
+        margin: 12px 0 0
+      }
+
+      .source-notes dt {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+        color: var(--accent);
+        font: 600 14px/1.4 var(--mono)
+      }
+
+      .source-notes dd {
+        margin: 3px 0 0
+      }
+
+      .inline .source-notes,
       .inline nav,
       .inline .panel-actions {
         display: none
@@ -800,6 +828,20 @@
             </details>
           </div>
         </section>
+        <aside class="source-notes" aria-labelledby="source-notes-title">
+          <h2 id="source-notes-title" data-en="From the Java source" data-zh="对照 Java 源码">From the Java source</h2>
+          <dl>
+            <dt>getChildIndexEntry</dt>
+            <dd data-en="The next child’s offset ends the interval. The last child uses the node’s endOffset."
+              data-zh="下一子项的偏移量是当前区间的上界。最后一项取节点的 endOffset。">The next child’s offset ends the interval. The last child uses the node’s endOffset.</dd>
+            <dt>satisfyStartEndTime</dt>
+            <dd data-en="Keep a page when startTime ≤ max and endTime ≥ min. Touching either endpoint counts."
+              data-zh="当 startTime ≤ max 且 endTime ≥ min 时保留该页。仅端点相接也算。">Keep a page when startTime ≤ max and endTime ≥ min. Touching either endpoint counts.</dd>
+            <dt>encodeInt</dt>
+            <dd data-en="ZigZag maps −65 to 129. Writing seven bits per byte produces 81 01 in hex."
+              data-zh="ZigZag 把 −65 映射成 129。每个字节承载七位数据，写出的十六进制载荷为 81 01。">ZigZag maps −65 to 129. Writing seven bits per byte produces 81 01 in hex.</dd>
+          </dl>
+        </aside>
       </div>
       <footer data-en="Illustrative values · Apache TsFile 2.5.0 Java implementation"
         data-zh="教学示例数据 · Apache TsFile 2.5.0 Java 实现">Illustrative values · Apache TsFile 2.5.0 Java implementation</footer>

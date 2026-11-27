@@ -6,9 +6,11 @@ Embed an HTML page or one of its named interactive panels in an Obsidian note. C
 
 The [TsFile storage workbench](examples/tsfile/tsfile-storage-workbench.html) has three interactive panels for index lookup, time filtering and integer encoding. A note can embed any one of them.
 
-[![An Obsidian split view shows the complete TsFile workbench on the left and only its interactive metadata index embedded in a note on the right.](docs/screenshots/tour/en/one-panel.png)](docs/screenshots/tour/en/one-panel.png)
+[![The full HTML file in a browser, beside the Obsidian editor with its file explorer, an interactive index panel, and a selected sentence in Live Preview.](docs/screenshots/tour/en/one-panel.png)](docs/screenshots/tour/en/one-panel@2x.png)
 
-**①** On the full page, choose **Select for linking** on the index panel, then **Copy embed**. **②** In the note, the same panel opens at `s14` in predecessor mode. Try **Exact match** there, then **Open full page** to take that selection back to the full workbench.
+The purple outlines mark the same `#lookup` panel. In Obsidian’s Live Preview, you can switch between **Predecessor** and **Exact match**, then type your finding directly below the result.
+
+To copy another panel into a note, open the HTML file in Obsidian, choose **Select for linking** on that panel, then **Copy embed**.
 
 ```md
 ![[tsfile-storage-workbench.html#lookup?key=s14&mode=floor&lang=en]]
