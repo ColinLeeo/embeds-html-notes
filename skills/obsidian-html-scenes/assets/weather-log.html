@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weather station log</title>
+  <script id="html-scenes" type="application/json">
+    {"reading":"Weather reading","sources":"Reading sources"}
+  </script>
+  <style>
+    :root { color-scheme: light dark; font: 16px/1.55 system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: CanvasText; background: Canvas; }
+    main { max-width: 54rem; margin: auto; padding: clamp(.8rem, 3vw, 2rem); }
+    header { margin-bottom: 1.3rem; }
+    h1, h2, p { margin: 0 0 .65rem; }
+    h1 { font-size: 1.7rem; }
+    h2 { font-size: 1.15rem; }
+    section { border: 1px solid color-mix(in srgb, CanvasText 24%, Canvas); border-radius: .6rem; padding: 1rem; }
+    section + section { margin-top: .85rem; }
+    .tools { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+    button, select { font: inherit; }
+    .pick { display: none; }
+    .hosted:not(.embedded) .pick { display: inline-block; }
+    .pick[aria-pressed=true] { font-weight: bold; }
+    .embedded header, [hidden] { display: none; }
+    .embedded main { max-width: none; padding: .5rem; }
+    .embedded section { margin: 0; }
+    .table-wrap { max-width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: .65rem; }
+    th, td { padding: .4rem .5rem; border-bottom: 1px solid color-mix(in srgb, CanvasText 20%, Canvas); }
+    th:first-child, td:first-child { text-align: left; }
+    th:not(:first-child), td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+    output { display: block; margin-top: .7rem; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Weather station log</h1>
+    <p>Two fictional weather observations each have an initial reading and a correction. Select a time to compare them.</p>
+  </header>
+  <section id="reading" data-embeddable aria-labelledby="merge-title">
+    <h2 id="merge-title">Weather reading</h2>
+    <p>The correction supplies any updated values. A missing value keeps the initial observation.</p>
+    <div class="tools">
+      <label>Time <select name="time"></select></label>
+      <button type="button" class="pick" aria-pressed="false">Select for linking</button>
+    </div>
+    <output aria-live="polite"></output>
+  </section>
+  <section id="sources" data-embeddable aria-labelledby="source-title">
+    <h2 id="source-title">Reading sources</h2>
+    <div class="tools">
+      <label>Time <select name="time"></select></label>
+      <button type="button" class="pick" aria-pressed="false">Select for linking</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Source</th><th scope="col">Temperature (°C)</th><th scope="col">Pressure (hPa)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<script>
+  "use strict";
+  // Each scene owns its controls. Both renderers read the same archived inputs.
+  const rows = new Map([
+    ["08:00", {initial: [17, 1013], correction: [null, 1015]}],
+    ["12:00", {initial: [22, 1016], correction: [23, null]}]
+  ]);
+  const scenes = new Map(Array.from(document.querySelectorAll("[data-embeddable]"),
+    section => [section.id, section]));
+  const defaultScene = scenes.keys().next().value;
+  const defaultTime = rows.keys().next().value;
+  let current = scenes.get(defaultScene);
+  let connected = false;
+  let inline = false;
+
+  function timeControl(section) { return section.querySelector('select[name="time"]'); }
+  function readParams(section) { return {time: timeControl(section).value}; }
+
+  function render(section) {
+    const {initial, correction} = rows.get(timeControl(section).value);
+    if (section.id === "reading") {
+      const merged = initial.map((older, i) => correction[i] ?? older);
+      section.querySelector("output").textContent = merged[0] + " °C · " + merged[1] + " hPa";
+      return;
+    }
+    const tbody = section.querySelector("tbody");
+    tbody.replaceChildren();
+    for (const [label, values] of [["Initial", initial], ["Correction", correction]]) {
+      const row = tbody.insertRow();
+      const header = document.createElement("th");
+      header.scope = "row";
+      header.textContent = label;
+      row.append(header);
+      for (const value of values) row.insertCell().textContent = value ?? "—";
+    }
+  }
+
+  function selectScene(section) {
+    current = section;
+    for (const item of scenes.values()) {
+      item.hidden = inline && item !== current;
+      item.querySelector(".pick").setAttribute("aria-pressed", String(item === current));
+    }
+  }
+
+  function sendState() {
+    if (connected) {
+      parent.postMessage({type: "html-scenes:state", scene: current.id, params: readParams(current)}, "*");
+    }
+  }
+
+  function sendHeight() {
+    if (connected && inline) {
+      const height = document.querySelector("main").getBoundingClientRect().height;
+      parent.postMessage({type: "html-scenes:height", height: Math.min(590, Math.ceil(height))}, "*");
+    }
+  }
+
+  function restore(id, params, embedded) {
+    inline = embedded;
+    document.body.classList.toggle("embedded", inline);
+    selectScene(scenes.get(id) || scenes.get(defaultScene));
+    timeControl(current).value = rows.has(params?.time) ? params.time : defaultTime;
+    render(current);
+    if (scenes.has(id) && !inline) current.scrollIntoView({block: "nearest"});
+    sendState();
+    sendHeight();
+  }
+
+  function changed(section) {
+    selectScene(section);
+    render(section);
+    sendState();
+    if (window === parent) {
+      const hash = "#" + current.id + "?" + new URLSearchParams(readParams(current));
+      history.replaceState(null, "", hash);
+    }
+  }
+
+  for (const section of scenes.values()) {
+    const input = timeControl(section);
+    for (const time of rows.keys()) input.add(new Option(time, time));
+    input.addEventListener("change", () => changed(section));
+    section.querySelector(".pick").addEventListener("click", () => changed(section));
+    render(section);
+  }
+
+  if (window === parent) {
+    function openHash() {
+      const raw = location.hash.slice(1);
+      const mark = raw.indexOf("?");
+      const id = mark < 0 ? raw : raw.slice(0, mark);
+      const params = new URLSearchParams(mark < 0 ? "" : raw.slice(mark + 1));
+      restore(id, Object.fromEntries(params), false);
+    }
+    window.addEventListener("hashchange", openHash);
+    openHash();
+  } else {
+    window.addEventListener("message", event => {
+      const message = event.data;
+      if (event.source !== parent || message?.type !== "html-scenes:open") return;
+      connected = true;
+      document.body.classList.add("hosted");
+      restore(message.scene, message.params, message.inline === true);
+    });
+    new ResizeObserver(sendHeight).observe(document.querySelector("main"));
+    parent.postMessage({type: "html-scenes:ready"}, "*");
+  }
+</script>
+</body>
+</html>

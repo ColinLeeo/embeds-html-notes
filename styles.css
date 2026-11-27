@@ -1,0 +1,11 @@
+.html-scenes-frame { display:flex; flex-direction:column; width:100%; height:100%; min-height:0; }
+.html-scenes-frame.is-inline { border:1px solid var(--background-modifier-border); border-radius:8px; overflow:hidden; height:auto; margin-block:.4em; }
+.html-scenes-bar { display:flex; gap:5px; align-items:center; flex-wrap:wrap; padding:7px 9px; background:var(--background-secondary); color:var(--text-muted); font:var(--font-ui-small) var(--font-interface); }
+.html-scenes-bar button { font-size:var(--font-ui-smaller); height:27px; }
+.html-scenes-caption { margin-inline-end:auto; color:var(--text-normal); overflow-wrap:anywhere; }
+.html-scenes-body { flex:1; min-height:0; }
+.html-scenes-body iframe { display:block; border:0; width:100%; max-width:none; height:100%; }
+.is-inline .html-scenes-body iframe { height:340px; }
+.workspace-leaf-content[data-type="html-scenes-view"] .view-content { padding:0; overflow:hidden; }
+.html-scenes-detail { color:var(--text-muted); font-size:var(--font-ui-smaller); overflow-wrap:anywhere; }
+.html-scenes-copy { width:100%; min-height:5rem; }

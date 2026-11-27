@@ -1,0 +1,10 @@
+{
+  "id": "html-scenes",
+  "name": "Interactive HTML Embeds",
+  "version": "0.1.0",
+  "minAppVersion": "1.15.1",
+  "description": "Link to a specific state of an interactive HTML file, embed it in a note, and find notes that reference the scene.",
+  "author": "ColinLeeo",
+  "isDesktopOnly": false,
+  "authorUrl": "https://github.com/ColinLeeo"
+}
