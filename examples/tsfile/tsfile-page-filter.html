@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>When can a reader skip a page?</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f7f6f1;
+        --paper: #fffefa;
+        --ink: #192f2b;
+        --mut: #526961;
+        --line: #ced8cf;
+        --soft: #eaf0e8;
+        --accent: #006b54;
+        --fill: #c1e4d2;
+        --hot: #b45232;
+        --hotbg: #f8dfce;
+        --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font: 15px/1.46 "Avenir Next", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        color: var(--ink);
+        background: var(--bg)
+      }
+
+      @media(prefers-color-scheme:dark) {
+        :root {
+          --bg: #17201d;
+          --paper: #202c27;
+          --ink: #ecf3eb;
+          --mut: #b0c6ba;
+          --line: #415449;
+          --soft: #2a3a31;
+          --accent: #79dbb1;
+          --fill: #244d3b;
+          --hot: #ffaf87;
+          --hotbg: #533a2c
+        }
+      }
+
+      * {
+        box-sizing: border-box
+      }
+
+      body {
+        margin: 0
+      }
+
+      main {
+        max-width: 980px;
+        margin: auto;
+        padding: 24px clamp(14px, 4vw, 44px) 28px
+      }
+
+      header,
+      .bar,
+      .control,
+      .label,
+      .keyrow,
+      footer,
+      .tabs,
+      .readout {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap
+      }
+
+      header,
+      footer {
+        justify-content: space-between
+      }
+
+      header {
+        border-bottom: 1px solid var(--line);
+        padding: 0 0 13px;
+        color: var(--mut)
+      }
+
+      header b {
+        color: var(--ink);
+        font-size: 16px
+      }
+
+      header small {
+        font: 12px var(--mono)
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0
+      }
+
+      h1 {
+        font-size: clamp(25px, 4.2vw, 43px);
+        line-height: 1.12;
+        letter-spacing: -.04em
+      }
+
+      h2 {
+        font-size: clamp(20px, 3vw, 28px);
+        line-height: 1.22;
+        letter-spacing: -.02em
+      }
+
+      h3 {
+        font-size: 16px
+      }
+
+      .intro {
+        margin: 22px 0 15px
+      }
+
+      .intro p,
+      .context p {
+        color: var(--mut);
+        margin-top: 6px
+      }
+
+      .panel,
+      .context {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: clamp(12px, 2.6vw, 24px)
+      }
+
+      .panel {
+        border-top: 3px solid var(--accent)
+      }
+
+      .bar {
+        justify-content: space-between;
+        margin-bottom: 12px
+      }
+
+      .symbol {
+        color: var(--mut);
+        font: 11px var(--mono)
+      }
+
+      .control,
+      .tabs {
+        gap: 7px;
+        margin: 10px 0
+      }
+
+      .control strong,
+      .label {
+        font-weight: 650
+      }
+
+      .control label {
+        font-weight: 600
+      }
+
+      select,
+      input,
+      button {
+        font: inherit;
+        color: var(--ink);
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 4px 9px
+      }
+
+      button {
+        cursor: pointer
+      }
+
+      button[aria-pressed=true] {
+        border-color: var(--accent);
+        background: var(--fill);
+        color: var(--ink);
+        font-weight: 650
+      }
+
+      button:focus-visible,
+      select:focus-visible,
+      input:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--hot);
+        outline-offset: 2px
+      }
+
+      a {
+        color: var(--accent)
+      }
+
+      code,
+      .num,
+      .chip,
+      .bits,
+      .byte {
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums
+      }
+
+      .readout {
+        background: var(--soft);
+        border-radius: 7px;
+        padding: 8px 12px;
+        margin-top: 12px;
+        min-height: 38px
+      }
+
+      .readout b {
+        color: var(--accent)
+      }
+
+      .readout p {
+        margin: 0
+      }
+
+      .context {
+        margin-top: 14px
+      }
+
+      footer {
+        margin-top: 18px;
+        font-size: 12px;
+        color: var(--mut)
+      }
+
+      footer a {
+        font-weight: 650
+      }
+
+      .hosted footer a {
+        display: none
+      }
+
+      .inline header,
+      .inline .intro,
+      .inline .context,
+      .inline footer {
+        display: none
+      }
+
+      .inline main {
+        width: 100%;
+        max-width: none;
+        padding: 0
+      }
+
+      .inline .panel {
+        border: 0;
+        border-radius: 0;
+        border-top: 3px solid var(--accent);
+        padding: 14px 16px
+      }
+
+      .inline h2 {
+        font-size: 20px
+      }
+
+      .inline .bar {
+        margin-bottom: 8px
+      }
+
+      .locale select {
+        font-size: 12px
+      }
+
+      .inline .symbol {
+        font-size: 10px
+      }
+
+      .pill {
+        background: var(--soft);
+        color: var(--mut);
+        padding: 1px 7px;
+        border-radius: 4px;
+        font-size: 12px
+      }
+
+      .keyrow {
+        gap: 4px
+      }
+
+      .chip {
+        background: var(--soft);
+        padding: 6px 11px;
+        border-radius: 5px;
+        border: 1px solid var(--line)
+      }
+
+      .chip.on {
+        background: var(--fill);
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 700
+      }
+
+      .source-links {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap
+      }
+
+      .hosted .source-links {
+        display: none
+      }
+
+      .timeline {
+        padding: 8px 0 2px
+      }
+
+      .ruler,
+      .lane {
+        display: grid;
+        grid-template-columns: 40px minmax(90px, 1fr) 104px;
+        align-items: center;
+        gap: 8px
+      }
+
+      .ruler {
+        font: 11px var(--mono);
+        color: var(--mut);
+        margin-bottom: 5px
+      }
+
+      .ticks {
+        display: flex;
+        justify-content: space-between
+      }
+
+      .lane {
+        margin: 3px 0;
+        min-height: 26px
+      }
+
+      .name {
+        font: 600 13px var(--mono)
+      }
+
+      .track {
+        height: 19px;
+        background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 25%);
+        border-bottom: 1px solid var(--line);
+        position: relative
+      }
+
+      .window,
+      .span {
+        position: absolute;
+        height: 100%;
+        left: var(--x);
+        width: var(--w)
+      }
+
+      .window {
+        background: var(--hotbg);
+        border-inline: 1px dashed var(--hot);
+        opacity: .85
+      }
+
+      .span {
+        top: 4px;
+        height: 10px;
+        background: var(--line);
+        border-radius: 4px
+      }
+
+      .keep .span {
+        background: var(--accent)
+      }
+
+      .result {
+        font-size: 12px;
+        color: var(--mut)
+      }
+
+      .keep .result {
+        color: var(--accent);
+        font-weight: 650
+      }
+
+      .query {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--hot);
+        font-size: 12px
+      }
+
+      .query i {
+        width: 22px;
+        height: 10px;
+        background: var(--hotbg);
+        border-inline: 1px dashed var(--hot)
+      }
+
+      @media(max-width:430px) {
+
+        .ruler,
+        .lane {
+          grid-template-columns: 24px minmax(85px, 1fr) 85px;
+          gap: 4px
+        }
+
+        .result {
+          font-size: 11px
+        }
+      }
+
+    </style>
+    <script type="application/json" id="html-scenes">{"window": "TimeBetweenAnd"}</script>
+  </head>
+
+  <body>
+    <main>
+      <header><b>Apache TsFile</b><small>v2.5.0 / Java</small><label class="locale"><select id="language"
+            aria-label="Page language">
+            <option value="en">English</option>
+            <option value="zh">简体中文</option>
+          </select></label></header>
+      <div class="intro">
+        <h1 id="page-title" data-en="When can a reader skip a page?" data-zh="读取时哪些页可以跳过？">When can a reader skip a page?</h1>
+        <p data-en="Compare a query interval with the first and last timestamps on five example pages."
+          data-zh="移动查询区间，与五个示例页的起止时间逐一比较。">Compare a query interval with the first and last timestamps on five example pages.</p>
+      </div>
+      <section class="panel" id="window" data-embeddable aria-labelledby="scene-title">
+        <div class="bar">
+          <h2 id="scene-title" data-en="Filter by time range" data-zh="按时间区间筛页">Filter by time range</h2><span
+            class="symbol">TimeBetweenAnd</span>
+        </div>
+        <div class="tabs" id="window-buttons" role="group" aria-labelledby="scene-title"></div>
+        <div class="query"><i aria-hidden="true"></i><span id="query-label"></span></div>
+        <div class="timeline">
+          <div class="ruler"><span></span>
+            <div class="ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div><span></span>
+          </div>
+          <div id="lanes"></div>
+        </div>
+        <div class="readout" aria-live="polite"><b id="result"></b><span class="pill" id="count"></span></div>
+      </section>
+      <section class="context">
+        <h3 data-en="How the Java reader decides" data-zh="Java 读取逻辑">How the Java reader decides</h3>
+        <p data-en="A page stays in the candidate set when its start is at or before the query end and its end is at or after the query start. The bounds are inclusive. A surviving page still needs further checks."
+          data-zh="页起点不晚于查询终点，且页终点不早于查询起点时，它仍是候选页。两个端点都包含在内。候选页里的数据还需继续判断。">A page stays in the candidate set when its start is at
+          or before the query end and its end is at or after the query start. The bounds are inclusive. A surviving page still
+          needs further checks.</p>
+      </section>
+      <footer><span data-en="Illustrative values · Apache TsFile 2.5.0" data-zh="教学示例数据 · Apache TsFile 2.5.0">Illustrative values
+          · Apache TsFile 2.5.0</span><span class="source-links"><a
+            href="https://github.com/apache/tsfile/blob/911a7e684e56fb2822c80009bce823e7ece0bd19/java/tsfile/src/main/java/org/apache/tsfile/read/filter/operator/TimeFilterOperators.java#L405-L428"
+            target="_blank" rel="noopener noreferrer" data-en="Read the Java source ↗" data-zh="阅读 Java 源码 ↗">Read the Java source
+            ↗</a> <a
+            href="https://raw.githubusercontent.com/apache/tsfile/911a7e684e56fb2822c80009bce823e7ece0bd19/java/tsfile/src/main/java/org/apache/tsfile/read/filter/operator/TimeFilterOperators.java#:~:text=startTime%20%3C%3D%20max"
+            target="_blank" rel="noopener noreferrer" data-en="Raw Java ↗" data-zh="Java 原文件 ↗">Raw Java ↗</a></span></footer>
+    </main>
+    <script>
+      const $ = id => document.getElementById(id);
+      const supported = raw => String(raw || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+      let host = false, inline = false, lang = supported(navigator.language), forced = null;
+      function t(en, zh) {
+        return lang === "zh" ? zh : en
+      }
+      function paint() {
+        document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+        for (const el of document.querySelectorAll("[data-en]")) el.textContent = el.dataset[lang];
+        document.title = $("page-title").textContent;
+        $("language").value = lang;
+        $("language").setAttribute("aria-label", t("Page language", "页面语言"));
+        draw();
+        if (host) report();
+      }
+      function report() {
+        const params = serialize();
+        if (forced) params.lang = forced;
+        parent.postMessage({type: "html-scenes:state", scene: sceneID, params}, "*");
+        reportHeight();
+      }
+      function reportHeight() {
+        if (host && inline)
+          parent.postMessage(
+              {
+                type: "html-scenes:height",
+                height:
+                    Math.min(600, Math.ceil(document.querySelector("main").getBoundingClientRect().height))
+              },
+              "*");
+      }
+      function changed() {
+        paint();
+        if (parent === window) {
+          const params = serialize();
+          if (forced) params.lang = forced;
+          history.replaceState(null, "", "#" + sceneID + "?" + new URLSearchParams(params));
+        }
+      }
+      function restore(params, locale) {
+        forced = ["en", "zh"].includes(params.lang) ? params.lang : null;
+        lang = forced || supported(locale);
+        applyParams(params);
+        paint();
+      }
+
+      const sceneID = "window";
+      const pages = [[0, 14], [18, 34], [40, 58], [62, 75], [80, 96]];
+      const windows = {
+        middle: [32, 54],
+        touch: [58, 62],
+        gap: [35, 39]
+      };
+      let selected = "middle";
+      function serialize() {
+        return {
+          range: selected
+        }
+      }
+      function applyParams(p) {
+        selected = Object.hasOwn(windows, p.range) ? p.range : "middle"
+      }
+      function draw() {
+        const [lo, hi] = windows[selected];
+        $("window-buttons").replaceChildren();
+        const labels = {
+          middle: t("Middle window", "中间区间"),
+          touch: t("Touch endpoints", "端点相接"),
+          gap: t("Between pages", "页间空隙")
+        };
+        for (const [key, range] of Object.entries(windows)) {
+          const b = document.createElement("button");
+          b.textContent = labels[key] + " · " + range.join("–");
+          b.setAttribute("aria-pressed", key === selected);
+          b.onclick = () => {
+            selected = key;
+            changed()
+          };
+          $("window-buttons").append(b);
+        }
+        const kept = [];
+        $("lanes").replaceChildren();
+        for (const [i, [a, b]] of pages.entries()) {
+          const keep = a <= hi && b >= lo;
+          if (keep) kept.push("P" + i);
+          const lane = document.createElement("div");
+          lane.className = "lane" + (keep ? " keep" : "");
+          lane.innerHTML = "<span class=\"name\">P" + i +
+              "</span><div class=\"track\"><i class=\"window\" style=\"--x:" + lo + "%;--w:" + (hi - lo) +
+              "%\"></i><i class=\"span\" style=\"--x:" + a + "%;--w:" + (b - a) +
+              "%\"></i></div><span class=\"result\">[" + a + ", " + b + "] · " +
+              (keep ? t("keep", "保留") : t("skip", "跳过")) + "</span>";
+          $("lanes").append(lane);
+        }
+        $("query-label").textContent = t("Query interval", "查询闭区间") + " [" + lo + ", " + hi + "]";
+        $("result").textContent =
+            kept.length ? t("Keep ", "保留 ") + kept.join(" + ") : t("Skip all pages", "跳过所有页");
+        $("count").textContent = t("Candidates", "候选页") + "  " + kept.length + " / " + pages.length;
+      }
+
+      $("language").addEventListener("change", e => {
+        lang = forced = e.target.value;
+        changed()
+      });
+      function openHash() {
+        const [id, query = ""] = location.hash.slice(1).split("?");
+        restore(id === sceneID ? Object.fromEntries(new URLSearchParams(query)) : {}, navigator.language);
+      }
+      if (parent === window) {
+        window.addEventListener("hashchange", openHash);
+        openHash();
+      } else {
+        window.addEventListener("message", e => {
+          if (e.source !== parent || e.data?.type !== "html-scenes:open") return;
+          host = true;
+          inline = e.data.inline === true;
+          document.body.classList.add("hosted");
+          document.body.classList.toggle("inline", inline);
+          restore(e.data.scene === sceneID ? e.data.params || {} : {}, e.data.locale || navigator.language);
+        });
+        openHash();
+        new ResizeObserver(reportHeight).observe(document.querySelector("main"));
+        parent.postMessage({type: "html-scenes:ready"}, "*");
+      }
+    </script>
+  </body>
+
+</html>

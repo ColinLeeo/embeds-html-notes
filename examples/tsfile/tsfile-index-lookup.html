@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Which child contains this key?</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f7f6f1;
+        --paper: #fffefa;
+        --ink: #192f2b;
+        --mut: #526961;
+        --line: #ced8cf;
+        --soft: #eaf0e8;
+        --accent: #006b54;
+        --fill: #c1e4d2;
+        --hot: #b45232;
+        --hotbg: #f8dfce;
+        --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font: 15px/1.46 "Avenir Next", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        color: var(--ink);
+        background: var(--bg)
+      }
+
+      @media(prefers-color-scheme:dark) {
+        :root {
+          --bg: #17201d;
+          --paper: #202c27;
+          --ink: #ecf3eb;
+          --mut: #b0c6ba;
+          --line: #415449;
+          --soft: #2a3a31;
+          --accent: #79dbb1;
+          --fill: #244d3b;
+          --hot: #ffaf87;
+          --hotbg: #533a2c
+        }
+      }
+
+      * {
+        box-sizing: border-box
+      }
+
+      body {
+        margin: 0
+      }
+
+      main {
+        max-width: 980px;
+        margin: auto;
+        padding: 24px clamp(14px, 4vw, 44px) 28px
+      }
+
+      header,
+      .bar,
+      .control,
+      .label,
+      .keyrow,
+      footer,
+      .tabs,
+      .readout {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap
+      }
+
+      header,
+      footer {
+        justify-content: space-between
+      }
+
+      header {
+        border-bottom: 1px solid var(--line);
+        padding: 0 0 13px;
+        color: var(--mut)
+      }
+
+      header b {
+        color: var(--ink);
+        font-size: 16px
+      }
+
+      header small {
+        font: 12px var(--mono)
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0
+      }
+
+      h1 {
+        font-size: clamp(25px, 4.2vw, 43px);
+        line-height: 1.12;
+        letter-spacing: -.04em
+      }
+
+      h2 {
+        font-size: clamp(20px, 3vw, 28px);
+        line-height: 1.22;
+        letter-spacing: -.02em
+      }
+
+      h3 {
+        font-size: 16px
+      }
+
+      .intro {
+        margin: 22px 0 15px
+      }
+
+      .intro p,
+      .context p {
+        color: var(--mut);
+        margin-top: 6px
+      }
+
+      .panel,
+      .context {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: clamp(12px, 2.6vw, 24px)
+      }
+
+      .panel {
+        border-top: 3px solid var(--accent)
+      }
+
+      .bar {
+        justify-content: space-between;
+        margin-bottom: 12px
+      }
+
+      .symbol {
+        color: var(--mut);
+        font: 11px var(--mono)
+      }
+
+      .control,
+      .tabs {
+        gap: 7px;
+        margin: 10px 0
+      }
+
+      .control strong,
+      .label {
+        font-weight: 650
+      }
+
+      .control label {
+        font-weight: 600
+      }
+
+      select,
+      input,
+      button {
+        font: inherit;
+        color: var(--ink);
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 4px 9px
+      }
+
+      button {
+        cursor: pointer
+      }
+
+      button[aria-pressed=true] {
+        border-color: var(--accent);
+        background: var(--fill);
+        color: var(--ink);
+        font-weight: 650
+      }
+
+      button:focus-visible,
+      select:focus-visible,
+      input:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--hot);
+        outline-offset: 2px
+      }
+
+      a {
+        color: var(--accent)
+      }
+
+      code,
+      .num,
+      .chip,
+      .bits,
+      .byte {
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums
+      }
+
+      .readout {
+        background: var(--soft);
+        border-radius: 7px;
+        padding: 8px 12px;
+        margin-top: 12px;
+        min-height: 38px
+      }
+
+      .readout b {
+        color: var(--accent)
+      }
+
+      .readout p {
+        margin: 0
+      }
+
+      .context {
+        margin-top: 14px
+      }
+
+      footer {
+        margin-top: 18px;
+        font-size: 12px;
+        color: var(--mut)
+      }
+
+      footer a {
+        font-weight: 650
+      }
+
+      .hosted footer a {
+        display: none
+      }
+
+      .inline header,
+      .inline .intro,
+      .inline .context,
+      .inline footer {
+        display: none
+      }
+
+      .inline main {
+        width: 100%;
+        max-width: none;
+        padding: 0
+      }
+
+      .inline .panel {
+        border: 0;
+        border-radius: 0;
+        border-top: 3px solid var(--accent);
+        padding: 14px 16px
+      }
+
+      .inline h2 {
+        font-size: 20px
+      }
+
+      .inline .bar {
+        margin-bottom: 8px
+      }
+
+      .locale select {
+        font-size: 12px
+      }
+
+      .inline .symbol {
+        font-size: 10px
+      }
+
+      .pill {
+        background: var(--soft);
+        color: var(--mut);
+        padding: 1px 7px;
+        border-radius: 4px;
+        font-size: 12px
+      }
+
+      .keyrow {
+        gap: 4px
+      }
+
+      .chip {
+        background: var(--soft);
+        padding: 6px 11px;
+        border-radius: 5px;
+        border: 1px solid var(--line)
+      }
+
+      .chip.on {
+        background: var(--fill);
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 700
+      }
+
+      .source-links {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap
+      }
+
+      .hosted .source-links {
+        display: none
+      }
+
+      .entries {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+        margin: 14px 0
+      }
+
+      .entry {
+        border: 1px solid var(--line);
+        padding: 10px 6px;
+        border-radius: 6px;
+        background: var(--paper);
+        text-align: center
+      }
+
+      .entry b,
+      .entry small {
+        display: block;
+        font-family: var(--mono)
+      }
+
+      .entry b {
+        font-size: 20px
+      }
+
+      .entry small {
+        font-size: 11px;
+        color: var(--mut)
+      }
+
+      .entry.sel {
+        border-color: var(--accent);
+        background: var(--fill)
+      }
+
+      .entry.probe {
+        box-shadow: inset 0 -3px var(--hot)
+      }
+
+      .trace {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap
+      }
+
+      .trace .num {
+        background: var(--soft);
+        padding: 4px 9px;
+        border-radius: 4px
+      }
+
+      .trace .arrow {
+        color: var(--mut)
+      }
+
+      .keybox {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap
+      }
+
+      .keybox .result-key {
+        margin-left: auto;
+        color: var(--hot);
+        font-weight: 650
+      }
+
+    </style>
+    <script type="application/json" id="html-scenes">{"lookup": "MetadataIndexNode"}</script>
+  </head>
+
+  <body>
+    <main>
+      <header><b>Apache TsFile</b><small>v2.5.0 / Java</small><label class="locale"><select id="language"
+            aria-label="Page language">
+            <option value="en">English</option>
+            <option value="zh">简体中文</option>
+          </select></label></header>
+      <div class="intro">
+        <h1 id="page-title" data-en="Which child contains this key?" data-zh="这个键应查哪一个子节点？">Which child contains this key?</h1>
+        <p data-en="Walk the binary search over four sorted keys, then read the selected byte interval."
+          data-zh="沿着四个有序键走一次二分查找，再看选中的字节区间。">Walk the binary search over four sorted keys, then read the selected byte interval.
+        </p>
+      </div>
+      <section class="panel" id="lookup" data-embeddable aria-labelledby="scene-title">
+        <div class="bar">
+          <h2 id="scene-title" data-en="Search the metadata index" data-zh="查找元数据索引">Search the metadata index</h2><span
+            class="symbol">MetadataIndexNode</span>
+        </div>
+        <div class="control"><label for="target" data-en="Search key" data-zh="查找键">Search key</label><select id="target">
+            <option>s01</option>
+            <option>s05</option>
+            <option>s07</option>
+            <option>s14</option>
+          </select>
+          <button id="floor" data-en="Predecessor" data-zh="取前驱">Predecessor</button><button id="exact" data-en="Exact match"
+            data-zh="精确匹配">Exact match</button>
+        </div>
+        <div class="entries" id="entries"></div>
+        <div class="keybox"><span data-en="Underline = probed entry" data-zh="下划线表示比较过的条目">Underline = probed entry</span><span
+            id="match" class="result-key"></span></div>
+        <div class="trace"><span data-en="Comparisons" data-zh="比较顺序">Comparisons</span><span class="num" id="trace"></span></div>
+        <div class="readout" aria-live="polite"><b id="result" class="num"></b><span id="meaning"></span></div>
+      </section>
+      <section class="context">
+        <h3 data-en="How the Java reader decides" data-zh="Java 读取逻辑">How the Java reader decides</h3>
+        <p data-en="In predecessor mode, a missing key selects the entry immediately below it, or the first entry when the key precedes every entry. The next offset bounds the interval. The final entry ends at the node’s endOffset."
+          data-zh="前驱模式下，键不存在时取它前面的条目。键小于所有条目时取第一个。下一条偏移量是区间上界，末条的上界取节点的 endOffset。">In predecessor mode, a missing key selects
+          the entry immediately below it, or the first entry when the key precedes every entry. The next offset bounds the
+          interval. The final entry ends at the node’s endOffset.</p>
+      </section>
+      <footer><span data-en="Illustrative values · Apache TsFile 2.5.0" data-zh="教学示例数据 · Apache TsFile 2.5.0">Illustrative values
+          · Apache TsFile 2.5.0</span><span class="source-links"><a
+            href="https://github.com/apache/tsfile/blob/911a7e684e56fb2822c80009bce823e7ece0bd19/java/tsfile/src/main/java/org/apache/tsfile/file/metadata/MetadataIndexNode.java#L128-L165"
+            target="_blank" rel="noopener noreferrer" data-en="Read the Java source ↗" data-zh="阅读 Java 源码 ↗">Read the Java source
+            ↗</a> <a
+            href="https://raw.githubusercontent.com/apache/tsfile/911a7e684e56fb2822c80009bce823e7ece0bd19/java/tsfile/src/main/java/org/apache/tsfile/file/metadata/MetadataIndexNode.java#:~:text=getChildIndexEntry"
+            target="_blank" rel="noopener noreferrer" data-en="Raw Java ↗" data-zh="Java 原文件 ↗">Raw Java ↗</a></span></footer>
+    </main>
+    <script>
+      const $ = id => document.getElementById(id);
+      const supported = raw => String(raw || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+      let host = false, inline = false, lang = supported(navigator.language), forced = null;
+      function t(en, zh) {
+        return lang === "zh" ? zh : en
+      }
+      function paint() {
+        document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+        for (const el of document.querySelectorAll("[data-en]")) el.textContent = el.dataset[lang];
+        document.title = $("page-title").textContent;
+        $("language").value = lang;
+        $("language").setAttribute("aria-label", t("Page language", "页面语言"));
+        draw();
+        if (host) report();
+      }
+      function report() {
+        const params = serialize();
+        if (forced) params.lang = forced;
+        parent.postMessage({type: "html-scenes:state", scene: sceneID, params}, "*");
+        reportHeight();
+      }
+      function reportHeight() {
+        if (host && inline)
+          parent.postMessage(
+              {
+                type: "html-scenes:height",
+                height:
+                    Math.min(600, Math.ceil(document.querySelector("main").getBoundingClientRect().height))
+              },
+              "*");
+      }
+      function changed() {
+        paint();
+        if (parent === window) {
+          const params = serialize();
+          if (forced) params.lang = forced;
+          history.replaceState(null, "", "#" + sceneID + "?" + new URLSearchParams(params));
+        }
+      }
+      function restore(params, locale) {
+        forced = ["en", "zh"].includes(params.lang) ? params.lang : null;
+        lang = forced || supported(locale);
+        applyParams(params);
+        paint();
+      }
+
+      const sceneID = "lookup";
+      const keys = ["s02", "s05", "s09", "s12"], offsets = [128, 256, 448, 640, 896],
+            targets = ["s01", "s05", "s07", "s14"];
+      let key = "s07", exact = false;
+      function serialize() {
+        return {
+          key, mode: exact ? "exact" : "floor"
+        }
+      }
+      function applyParams(p) {
+        key = targets.includes(p.key) ? p.key : "s07";
+        exact = p.mode === "exact"
+      }
+      function draw() {
+        $("target").value = key;
+        $("floor").setAttribute("aria-pressed", !exact);
+        $("exact").setAttribute("aria-pressed", exact);
+        let low = 0, high = keys.length - 1, hit = -1;
+        const path = [];
+        while (low <= high) {
+          const mid = (low + high) >>> 1;
+          path.push(mid);
+          if (keys[mid] === key) {
+            hit = mid;
+            break
+          }
+          if (keys[mid] < key)
+            low = mid + 1;
+          else
+            high = mid - 1;
+        }
+        const i = hit >= 0 ? hit : exact ? -1 : Math.max(0, low - 1);
+        $("entries").replaceChildren(...keys.map((k, n) => {
+          const e = document.createElement("div");
+          e.className = "entry" + (i === n ? " sel" : "") + (path.includes(n) ? " probe" : "");
+          e.innerHTML = "<b>" + k + "</b><small>@ " + offsets[n] + " B</small>";
+          return e
+        }));
+        $("trace").textContent = path.map(
+                                         n => keys[n] +
+                                             (keys[n] === key   ? " = " :
+                                                  keys[n] < key ? " < " :
+                                                                  " > ") +
+                                             key)
+                                     .join("   →   ");
+        $("match").textContent = hit !== -1 ? t("Exact match", "精确命中") : t("Absent key", "键不存在");
+        $("result").textContent = i < 0 ? t("No child entry", "没有匹配子项") :
+                                          keys[i] + "  →  [" + offsets[i] + ", " + offsets[i + 1] + ") B";
+        $("meaning").textContent = i < 0 ? t("No byte interval returned.", "不返回字节区间。") :
+                                           t("Selected byte interval", "选中的字节区间");
+      }
+      $("target").onchange = e => {
+        key = e.target.value;
+        changed()
+      };
+      $("floor").onclick = () => {
+        exact = false;
+        changed()
+      };
+      $("exact").onclick = () => {
+        exact = true;
+        changed()
+      };
+
+      $("language").addEventListener("change", e => {
+        lang = forced = e.target.value;
+        changed()
+      });
+      function openHash() {
+        const [id, query = ""] = location.hash.slice(1).split("?");
+        restore(id === sceneID ? Object.fromEntries(new URLSearchParams(query)) : {}, navigator.language);
+      }
+      if (parent === window) {
+        window.addEventListener("hashchange", openHash);
+        openHash();
+      } else {
+        window.addEventListener("message", e => {
+          if (e.source !== parent || e.data?.type !== "html-scenes:open") return;
+          host = true;
+          inline = e.data.inline === true;
+          document.body.classList.add("hosted");
+          document.body.classList.toggle("inline", inline);
+          restore(e.data.scene === sceneID ? e.data.params || {} : {}, e.data.locale || navigator.language);
+        });
+        openHash();
+        new ResizeObserver(reportHeight).observe(document.querySelector("main"));
+        parent.postMessage({type: "html-scenes:ready"}, "*");
+      }
+    </script>
+  </body>
+
+</html>

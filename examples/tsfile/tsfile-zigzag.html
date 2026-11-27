@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>From a signed integer to bytes</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f7f6f1;
+        --paper: #fffefa;
+        --ink: #192f2b;
+        --mut: #526961;
+        --line: #ced8cf;
+        --soft: #eaf0e8;
+        --accent: #006b54;
+        --fill: #c1e4d2;
+        --hot: #b45232;
+        --hotbg: #f8dfce;
+        --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font: 15px/1.46 "Avenir Next", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        color: var(--ink);
+        background: var(--bg)
+      }
+
+      @media(prefers-color-scheme:dark) {
+        :root {
+          --bg: #17201d;
+          --paper: #202c27;
+          --ink: #ecf3eb;
+          --mut: #b0c6ba;
+          --line: #415449;
+          --soft: #2a3a31;
+          --accent: #79dbb1;
+          --fill: #244d3b;
+          --hot: #ffaf87;
+          --hotbg: #533a2c
+        }
+      }
+
+      * {
+        box-sizing: border-box
+      }
+
+      body {
+        margin: 0
+      }
+
+      main {
+        max-width: 980px;
+        margin: auto;
+        padding: 24px clamp(14px, 4vw, 44px) 28px
+      }
+
+      header,
+      .bar,
+      .control,
+      .label,
+      .keyrow,
+      footer,
+      .tabs,
+      .readout {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap
+      }
+
+      header,
+      footer {
+        justify-content: space-between
+      }
+
+      header {
+        border-bottom: 1px solid var(--line);
+        padding: 0 0 13px;
+        color: var(--mut)
+      }
+
+      header b {
+        color: var(--ink);
+        font-size: 16px
+      }
+
+      header small {
+        font: 12px var(--mono)
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0
+      }
+
+      h1 {
+        font-size: clamp(25px, 4.2vw, 43px);
+        line-height: 1.12;
+        letter-spacing: -.04em
+      }
+
+      h2 {
+        font-size: clamp(20px, 3vw, 28px);
+        line-height: 1.22;
+        letter-spacing: -.02em
+      }
+
+      h3 {
+        font-size: 16px
+      }
+
+      .intro {
+        margin: 22px 0 15px
+      }
+
+      .intro p,
+      .context p {
+        color: var(--mut);
+        margin-top: 6px
+      }
+
+      .panel,
+      .context {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: clamp(12px, 2.6vw, 24px)
+      }
+
+      .panel {
+        border-top: 3px solid var(--accent)
+      }
+
+      .bar {
+        justify-content: space-between;
+        margin-bottom: 12px
+      }
+
+      .symbol {
+        color: var(--mut);
+        font: 11px var(--mono)
+      }
+
+      .control,
+      .tabs {
+        gap: 7px;
+        margin: 10px 0
+      }
+
+      .control strong,
+      .label {
+        font-weight: 650
+      }
+
+      .control label {
+        font-weight: 600
+      }
+
+      select,
+      input,
+      button {
+        font: inherit;
+        color: var(--ink);
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 4px 9px
+      }
+
+      button {
+        cursor: pointer
+      }
+
+      button[aria-pressed=true] {
+        border-color: var(--accent);
+        background: var(--fill);
+        color: var(--ink);
+        font-weight: 650
+      }
+
+      button:focus-visible,
+      select:focus-visible,
+      input:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--hot);
+        outline-offset: 2px
+      }
+
+      a {
+        color: var(--accent)
+      }
+
+      code,
+      .num,
+      .chip,
+      .bits,
+      .byte {
+        font-family: var(--mono);
+        font-variant-numeric: tabular-nums
+      }
+
+      .readout {
+        background: var(--soft);
+        border-radius: 7px;
+        padding: 8px 12px;
+        margin-top: 12px;
+        min-height: 38px
+      }
+
+      .readout b {
+        color: var(--accent)
+      }
+
+      .readout p {
+        margin: 0
+      }
+
+      .context {
+        margin-top: 14px
+      }
+
+      footer {
+        margin-top: 18px;
+        font-size: 12px;
+        color: var(--mut)
+      }
+
+      footer a {
+        font-weight: 650
+      }
+
+      .hosted footer a {
+        display: none
+      }
+
+      .inline header,
+      .inline .intro,
+      .inline .context,
+      .inline footer {
+        display: none
+      }
+
+      .inline main {
+        width: 100%;
+        max-width: none;
+        padding: 0
+      }
+
+      .inline .panel {
+        border: 0;
+        border-radius: 0;
+        border-top: 3px solid var(--accent);
+        padding: 14px 16px
+      }
+
+      .inline h2 {
+        font-size: 20px
+      }
+
+      .inline .bar {
+        margin-bottom: 8px
+      }
+
+      .locale select {
+        font-size: 12px
+      }
+
+      .inline .symbol {
+        font-size: 10px
+      }
+
+      .pill {
+        background: var(--soft);
+        color: var(--mut);
+        padding: 1px 7px;
+        border-radius: 4px;
+        font-size: 12px
+      }
+
+      .keyrow {
+        gap: 4px
+      }
+
+      .chip {
+        background: var(--soft);
+        padding: 6px 11px;
+        border-radius: 5px;
+        border: 1px solid var(--line)
+      }
+
+      .chip.on {
+        background: var(--fill);
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 700
+      }
+
+      .source-links {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap
+      }
+
+      .hosted .source-links {
+        display: none
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        margin: 15px 0
+      }
+
+      .stage {
+        background: var(--soft);
+        border-radius: 7px;
+        padding: 9px 12px
+      }
+
+      .stage b {
+        display: block;
+        font: 600 clamp(17px, 2.5vw, 25px) var(--mono);
+        overflow-wrap: anywhere
+      }
+
+      .stage small {
+        color: var(--mut)
+      }
+
+      .bytes {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 9px 0
+      }
+
+      .byte {
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 8px 12px;
+        background: var(--paper)
+      }
+
+      .byte b {
+        display: block;
+        font-size: 22px;
+        color: var(--accent)
+      }
+
+      .bits {
+        font-size: 12px;
+        letter-spacing: 1px
+      }
+
+      .bits em {
+        font-style: normal;
+        color: var(--hot);
+        font-weight: bold;
+        margin-right: 2px
+      }
+
+      .byte-title {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px
+      }
+
+      .byte-title small {
+        color: var(--mut)
+      }
+
+      input[type=number] {
+        width: 9.3em
+      }
+
+      .invalid {
+        color: var(--hot);
+        font-size: 13px
+      }
+
+      .preset {
+        padding: 3px 8px;
+        font: 13px var(--mono)
+      }
+
+    </style>
+    <script type="application/json" id="html-scenes">{"bytes": "IntZigzagEncoder"}</script>
+  </head>
+
+  <body>
+    <main>
+      <header><b>Apache TsFile</b><small>v2.5.0 / Java</small><label class="locale"><select id="language"
+            aria-label="Page language">
+            <option value="en">English</option>
+            <option value="zh">简体中文</option>
+          </select></label></header>
+      <div class="intro">
+        <h1 id="page-title" data-en="From a signed integer to bytes" data-zh="一个有符号整数怎样变成字节？">From a signed integer to bytes</h1>
+        <p data-en="Follow one 32-bit value through ZigZag mapping and variable-length encoding."
+          data-zh="沿一个 32 位整数，查看 ZigZag 映射和变长编码产生的字节。">Follow one 32-bit value through ZigZag mapping and variable-length
+          encoding.</p>
+      </div>
+      <section class="panel" id="bytes" data-embeddable aria-labelledby="scene-title">
+        <div class="bar">
+          <h2 id="scene-title" data-en="Inspect the encoded bytes" data-zh="查看编码字节">Inspect the encoded bytes</h2><span
+            class="symbol">IntZigzagEncoder</span>
+        </div>
+        <div class="control"><label for="number" data-en="Input" data-zh="输入">Input</label><input type="number" id="number"
+            step="1" min="-2147483648" max="2147483647">
+          <div class="keyrow" id="presets"></div>
+        </div>
+        <p class="invalid" role="status" id="error"></p>
+        <div class="flow">
+          <div class="stage"><small data-en="Signed integer" data-zh="有符号整数">Signed integer</small><b id="signed"></b></div><span
+            aria-hidden="true">→</span>
+          <div class="stage"><small data-en="Unsigned ZigZag value" data-zh="ZigZag 无符号值">Unsigned ZigZag value</small><b
+              id="mapped"></b></div>
+        </div>
+        <div class="byte-title"><strong data-en="Payload in write order" data-zh="按写入顺序排列的载荷">Payload in write
+            order</strong><small id="length"></small></div>
+        <div class="bytes" id="bytes-list"></div>
+        <p data-en="The highlighted high bit is 1 when another byte follows." data-zh="高位标为橙色，值为 1 表示后面还有字节。">The highlighted high
+          bit is 1 when another byte follows.</p>
+        <div class="readout" aria-live="polite"><b class="num" id="result"></b></div>
+      </section>
+      <section class="context">
+        <h3 data-en="How the Java encoder writes a block" data-zh="Java 编码器如何写块">How the Java encoder writes a block</h3>
+        <p data-en="Each payload byte contributes seven bits, least significant group first. A flushed block prefixes the payload with its byte length and the number of values. This example flushes exactly one value."
+          data-zh="每个载荷字节保存七位，低位组先写。刷出一个块时，先写载荷长度和数值个数，再写载荷。本例每块只写一个数。">Each payload byte contributes seven bits, least
+          significant group first. A flushed block prefixes the payload with its byte length and the number of values. This
+          example flushes exactly one value.</p>
+      </section>
+      <footer><span data-en="Illustrative values · Apache TsFile 2.5.0" data-zh="教学示例数据 · Apache TsFile 2.5.0">Illustrative values
+          · Apache TsFile 2.5.0</span><span class="source-links"><a
+            href="https://github.com/apache/tsfile/blob/911a7e684e56fb2822c80009bce823e7ece0bd19/java/tsfile/src/main/java/org/apache/tsfile/encoding/encoder/IntZigzagEncoder.java#L51-L87"
+            target="_blank" rel="noopener noreferrer" data-en="Read the Java source ↗" data-zh="阅读 Java 源码 ↗">Read the Java source
+            ↗</a> <a
+            href="https://raw.githubusercontent.com/apache/tsfile/911a7e684e56fb2822c80009bce823e7ece0bd19/java/tsfile/src/main/java/org/apache/tsfile/encoding/encoder/IntZigzagEncoder.java#:~:text=private%20byte%5B%5D%20encodeInt"
+            target="_blank" rel="noopener noreferrer" data-en="Raw Java ↗" data-zh="Java 原文件 ↗">Raw Java ↗</a></span></footer>
+    </main>
+    <script>
+      const $ = id => document.getElementById(id);
+      const supported = raw => String(raw || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+      let host = false, inline = false, lang = supported(navigator.language), forced = null;
+      function t(en, zh) {
+        return lang === "zh" ? zh : en
+      }
+      function paint() {
+        document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+        for (const el of document.querySelectorAll("[data-en]")) el.textContent = el.dataset[lang];
+        document.title = $("page-title").textContent;
+        $("language").value = lang;
+        $("language").setAttribute("aria-label", t("Page language", "页面语言"));
+        draw();
+        if (host) report();
+      }
+      function report() {
+        const params = serialize();
+        if (forced) params.lang = forced;
+        parent.postMessage({type: "html-scenes:state", scene: sceneID, params}, "*");
+        reportHeight();
+      }
+      function reportHeight() {
+        if (host && inline)
+          parent.postMessage(
+              {
+                type: "html-scenes:height",
+                height:
+                    Math.min(600, Math.ceil(document.querySelector("main").getBoundingClientRect().height))
+              },
+              "*");
+      }
+      function changed() {
+        paint();
+        if (parent === window) {
+          const params = serialize();
+          if (forced) params.lang = forced;
+          history.replaceState(null, "", "#" + sceneID + "?" + new URLSearchParams(params));
+        }
+      }
+      function restore(params, locale) {
+        forced = ["en", "zh"].includes(params.lang) ? params.lang : null;
+        lang = forced || supported(locale);
+        applyParams(params);
+        paint();
+      }
+
+      const sceneID = "bytes";
+      let n = -65;
+      function valid(raw) {
+        return /^-?\d+$/.test(String(raw)) && Number(raw) >= -2147483648 && Number(raw) <= 2147483647
+      }
+      function serialize() {
+        return {
+          n: String(n)
+        }
+      }
+      function applyParams(p) {
+        n = valid(p.n) ? Number(p.n) : -65
+      }
+      function draw() {
+        $("number").value = n;
+        $("error").textContent = "";
+        const u = ((n << 1) ^ (n >> 31)) >>> 0;
+        let v = u;
+        const bs = [];
+        while (v >= 128) {
+          bs.push((v & 127) | 128);
+          v >>>= 7
+        }
+        bs.push(v);
+        $("signed").textContent = n;
+        $("mapped").textContent = u;
+        $("presets").replaceChildren(...[-65, -64, -1, 0, 64].map(x => {
+          const b = document.createElement("button");
+          b.className = "preset";
+          b.textContent = String(x);
+          b.setAttribute("aria-pressed", x === n);
+          b.onclick = () => {
+            n = x;
+            changed()
+          };
+          return b
+        }));
+        $("bytes-list").replaceChildren(...bs.map(b => {
+          const box = document.createElement("div");
+          box.className = "byte";
+          const bits = b.toString(2).padStart(8, "0");
+          box.innerHTML = "<b>" + b.toString(16).toUpperCase().padStart(2, "0") +
+              "</b><span class=\"bits\"><em>" + bits[0] + "</em>" + bits.slice(1) + "</span>";
+          return box
+        }));
+        $("length").textContent = bs.length + t(bs.length === 1 ? " byte" : " bytes", " 字节");
+        $("result").textContent = t("One-value block", "单值块") + "   " +
+            [bs.length, 1, ...bs].map(b => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
+      }
+      $("number").onchange = e => {
+        if (!valid(e.target.value)) {
+          $("error").textContent = t("Enter a signed 32-bit integer.", "请输入有符号 32 位整数。");
+          return
+        }
+        n = Number(e.target.value);
+        changed()
+      };
+
+      $("language").addEventListener("change", e => {
+        lang = forced = e.target.value;
+        changed()
+      });
+      function openHash() {
+        const [id, query = ""] = location.hash.slice(1).split("?");
+        restore(id === sceneID ? Object.fromEntries(new URLSearchParams(query)) : {}, navigator.language);
+      }
+      if (parent === window) {
+        window.addEventListener("hashchange", openHash);
+        openHash();
+      } else {
+        window.addEventListener("message", e => {
+          if (e.source !== parent || e.data?.type !== "html-scenes:open") return;
+          host = true;
+          inline = e.data.inline === true;
+          document.body.classList.add("hosted");
+          document.body.classList.toggle("inline", inline);
+          restore(e.data.scene === sceneID ? e.data.params || {} : {}, e.data.locale || navigator.language);
+        });
+        openHash();
+        new ResizeObserver(reportHeight).observe(document.querySelector("main"));
+        parent.postMessage({type: "html-scenes:ready"}, "*");
+      }
+    </script>
+  </body>
+
+</html>

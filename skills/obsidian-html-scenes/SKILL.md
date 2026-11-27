@@ -30,7 +30,15 @@ Register the message listener and initialize the data before announcing readines
 | `html-scenes:state` | Page | After applying an open or a reader action, report the active `scene` and normalized `params`. A full page with several scenes should make the selection explicit. |
 | `html-scenes:height` | Page | Optionally send numeric `height` after the visible content changes. Measure the content container, not the viewport. The host clamps this value to 100–1200 pixels. |
 
+For a multilingual page, the host can include its Obsidian language code in the optional `locale` field of `html-scenes:open`. Read it on each open. A saved language parameter can take precedence when the author wants the scene to match the prose around it. Release 0.1.0 omits this field. Use the browser language when no language is saved and the host omits the field, with a fallback to a language the page supports. The [TsFile examples](../../examples/tsfile/) share each HTML file across English and Simplified Chinese notes.
+
 Keep all required scripts, styles, data and images within the file. Narrow inline views should preserve controls and readable text. Wide charts or tables can scroll inside their own containers. Full-page mode should restore the same scene and keep its surrounding context available.
+
+## Embed one panel from a large page
+
+In a checkout of the plugin repository, the [TsFile storage workbench](../../examples/tsfile/tsfile-storage-workbench.html) keeps three panels in one offline file. Each panel owns its controls and state. A note can embed the index directly with `![[tsfile-storage-workbench.html#lookup?key=s14&mode=floor]]`. In inline mode, show only `lookup` and measure its visible content. In full-page mode, show all three panels and restore the selected key and mode. Give each panel a **Select for linking** action so the host can copy it before the reader changes a control.
+
+To check the boundary, open the [companion note](../../examples/tsfile/en/One%20panel%20from%20the%20TsFile%20workbench.md) next to the full HTML. Switch to exact match inside the note and expand it. Then select the byte encoder in the full page, copy its embed and confirm that the new embed shows just the encoder.
 
 ## Deliver and check
 

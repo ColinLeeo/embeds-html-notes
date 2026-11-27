@@ -3,7 +3,7 @@
   "name": "Interactive HTML Embeds",
   "version": "0.1.0",
   "minAppVersion": "1.15.1",
-  "description": "Link to a specific state of an interactive HTML file, embed it in a note, and find notes that reference the scene.",
+  "description": "Embed HTML pages or named interactive panels in notes. Save a panel's settings in a link and find notes that reference it.",
   "author": "ColinLeeo",
   "isDesktopOnly": false,
   "authorUrl": "https://github.com/ColinLeeo"
